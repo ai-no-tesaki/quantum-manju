@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>量子まんじゅう</title>
+<style>
+  :root {
+    --paper: #E6DEC9;
+    --paper-deep: #D9CFB0;
+    --card: #F1EAD6;
+    --ink: #23262B;
+    --ink-soft: #5B5E57;
+    --line: rgba(35,38,43,0.14);
+    --indigo: #2B4A73;
+    --indigo-deep: #1D3555;
+    --indigo-soft: rgba(43,74,115,0.12);
+    --danger: #A33B2E;
+    --danger-soft: rgba(163,59,46,0.15);
+    --safe: #5F7F52;
+    --safe-soft: rgba(95,127,82,0.15);
+    --gold: #AE8A44;
+    --bun-a: #EACB93;
+    --bun-b: #C89C55;
+    --bun-line: #8C6A34;
+
+    --font-display: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", serif;
+    --font-body: "Hiragino Kaku Gothic ProN", "Yu Gothic Medium", "Yu Gothic", "Noto Sans JP", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Consolas", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #1B1C20;
+      --paper-deep: #232429;
+      --card: #26282E;
+      --ink: #EAE3D2;
+      --ink-soft: #ABA694;
+      --line: rgba(234,227,210,0.14);
+      --indigo: #7DA0D6;
+      --indigo-deep: #4A6EA0;
+      --indigo-soft: rgba(125,160,214,0.14);
+      --danger: #E08976;
+      --danger-soft: rgba(224,137,118,0.16);
+      --safe: #93B587;
+      --safe-soft: rgba(147,181,135,0.16);
+      --gold: #D2AE6C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1B1C20; --paper-deep: #232429; --card: #26282E;
+    --ink: #EAE3D2; --ink-soft: #ABA694; --line: rgba(234,227,210,0.14);
+    --indigo: #7DA0D6; --indigo-deep: #4A6EA0; --indigo-soft: rgba(125,160,214,0.14);
+    --danger: #E08976; --danger-soft: rgba(224,137,118,0.16);
+    --safe: #93B587; --safe-soft: rgba(147,181,135,0.16); --gold: #D2AE6C;
+  }
+  :root[data-theme="light"] {
+    --paper: #E6DEC9; --paper-deep: #D9CFB0; --card: #F1EAD6;
+    --ink: #23262B; --ink-soft: #5B5E57; --line: rgba(35,38,43,0.14);
+    --indigo: #2B4A73; --indigo-deep: #1D3555; --indigo-soft: rgba(43,74,115,0.12);
+    --danger: #A33B2E; --danger-soft: rgba(163,59,46,0.15);
+    --safe: #5F7F52; --safe-soft: rgba(95,127,82,0.15); --gold: #AE8A44;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    background-image:
+      radial-gradient(ellipse at top, rgba(255,255,255,0.06), transparent 60%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/></svg>");
+    color: var(--ink);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 1.15rem 1.25rem 1.4rem;
+  }
+
+  header.top {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 0.7rem;
+    margin-bottom: 0.85rem;
+  }
+  .title-block .eyebrow {
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+    margin: 0 0 0.2rem;
+  }
+  .title-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.2rem 1rem;
+  }
+  .title-block h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    margin: 0;
+    letter-spacing: 0.04em;
+  }
+  .title-block .tagline {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+
+  .scoreboard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .score-chip {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.55rem 0.85rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .score-chip.active { border-color: var(--indigo); box-shadow: 0 0 0 1px var(--indigo-soft); }
+  .score-chip .who {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .score-chip .who .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ink-soft);
+  }
+  .score-chip.active .who .dot { background: var(--indigo); }
+  .score-chip .sweet {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 1.3rem;
+    color: var(--gold);
+  }
+  .score-chip .sweet span { font-size: 0.68rem; color: var(--ink-soft); margin-left: 0.25rem; }
+  details.howto {
+    margin-bottom: 0.85rem;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--card);
+    padding: 0.1rem 0.95rem;
+  }
+  details.howto summary {
+    cursor: pointer;
+    padding: 0.5rem 0;
+    font-size: 0.84rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--indigo);
+  }
+  details.howto summary::marker { color: var(--indigo); }
+  details.howto ul {
+    margin: 0 0 0.8rem;
+    padding-left: 1.15rem;
+    font-size: 0.83rem;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  details.howto li strong { color: var(--ink); font-weight: 600; }
+
+  .status-line {
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+    min-height: 1.4em;
+    margin: 0 0 0.6rem;
+  }
+  .status-line strong { color: var(--indigo); font-weight: 600; }
+
+  .board {
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: 1rem;
+    align-items: start;
+  }
+  @media (max-width: 760px) {
+    .board { grid-template-columns: 1fr; }
+  }
+
+  .tray {
+    background: var(--paper-deep);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.85rem 0.8rem;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.3rem 0.4rem;
+  }
+
+  .bun-card {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 0;
+    text-align: center;
+    cursor: pointer;
+    font-family: inherit;
+    color: inherit;
+    transform: translateY(0) scale(1);
+    transition: transform 0.18s ease;
+  }
+  .bun-card.intro { animation: rise 0.5s ease backwards; }
+  .bun-card:hover:not(:disabled) { transform: translateY(-3px); }
+  .bun-card:disabled { cursor: default; }
+  .bun-card.eaten { cursor: default; opacity: 0.62; }
+  .bun-card:focus-visible { outline: 2px solid var(--indigo); outline-offset: 3px; border-radius: 4px; }
+
+  .bun-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 62px;
+    margin: 0 auto 0.1rem;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+  .bun-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .bun-card.selected .bun-frame { box-shadow: 0 0 0 2px var(--indigo), 0 0 0 5px var(--indigo-soft); border-radius: 50%; }
+  .bun-card.source .bun-frame { box-shadow: 0 0 0 2px var(--gold), 0 0 0 5px rgba(174,138,68,0.18); border-radius: 50%; }
+
+  .bun-idx {
+    font-family: var(--font-display);
+    font-size: 0.86rem;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+  .bun-meta {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    line-height: 1.25;
+  }
+  .bun-meta .pct { color: var(--danger); font-weight: 700; }
+  .bun-meta .sw { color: var(--safe); font-weight: 700; }
+  .bun-meta .poison-tag { color: var(--danger); font-weight: 700; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px) scale(0.92); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes collapseSafe {
+    0% { transform: scale(1); opacity: 1; }
+    40% { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(0.4); opacity: 0; }
+  }
+  @keyframes collapsePoison {
+    0%, 20% { transform: scale(1) rotate(0deg); }
+    35% { transform: scale(1.18) rotate(-4deg); }
+    50% { transform: scale(1.1) rotate(4deg); }
+    100% { transform: scale(1.02) rotate(0deg); }
+  }
+  .bun-card.resolving-safe .bun-frame { animation: collapseSafe 0.85s ease forwards; }
+  .bun-card.resolving-poison .bun-frame { animation: collapsePoison 0.85s ease forwards; }
+  .bun-card.resolving-poison .bun-meta.poison-tag { color: var(--danger); font-weight: 700; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bun-card, .bun-frame { animation: none !important; transition: none !important; }
+  }
+
+  .side {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .action-panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.8rem;
+  }
+  .action-panel h2 {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    margin: 0 0 0.55rem;
+    font-weight: 600;
+  }
+  .btn {
+    width: 100%;
+    display: block;
+    font-family: var(--font-body);
+    font-size: 0.86rem;
+    font-weight: 600;
+    padding: 0.55rem 0.8rem;
+    border-radius: 3px;
+    border: 1px solid var(--indigo);
+    background: var(--indigo);
+    color: var(--paper);
+    cursor: pointer;
+    margin-bottom: 0.45rem;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+  .btn:last-child { margin-bottom: 0; }
+  .btn.secondary { background: transparent; color: var(--indigo); }
+  .btn.ghost { background: transparent; color: var(--ink-soft); border-color: var(--line); }
+  .btn:disabled { opacity: 0.38; cursor: not-allowed; }
+  .btn:not(:disabled):hover { opacity: 0.88; }
+  .btn:not(:disabled):active { transform: scale(0.98); }
+  .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .log-panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.8rem;
+    max-height: 190px;
+    overflow-y: auto;
+  }
+  .log-panel h2 {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    margin: 0 0 0.5rem;
+    font-weight: 600;
+  }
+  .log-panel ol { list-style: none; margin: 0; padding: 0; }
+  .log-panel li {
+    font-size: 0.78rem;
+    line-height: 1.6;
+    padding: 0.4rem 0;
+    border-top: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+  .log-panel li:first-child { border-top: none; }
+  .log-panel li:first-child { color: var(--ink); }
+  .log-panel .empty { color: var(--ink-soft); font-style: normal; }
+
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(20,20,18,0.55);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem;
+    z-index: 20;
+  }
+  .overlay .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 2.2rem 2rem;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+  .overlay .card .result-eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    color: var(--danger);
+    margin: 0 0 0.5rem;
+  }
+  .overlay .card h2 {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    margin: 0 0 0.9rem;
+  }
+  .overlay .card .final-scores {
+    display: flex;
+    justify-content: center;
+    gap: 1.2rem;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-bottom: 1.4rem;
+  }
+  .overlay .card .final-scores b { color: var(--gold); }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="title-block">
+      <p class="eyebrow">QUANTUM MANJU — 確率崩壊型・毒まんじゅう</p>
+      <div class="title-row">
+        <h1>量子まんじゅう</h1>
+        <p class="tagline">観測するまで、どのまんじゅうも「少しずつ」毒である。</p>
+      </div>
+    </div>
+  </header>
+
+  <details class="howto">
+    <summary>遊び方</summary>
+    <ul>
+      <li><strong>毒はまだ決まっていない。</strong>4×4・16個のまんじゅうそれぞれが「毒である確率」を持っているだけの状態（重ね合わせ）。</li>
+      <li><strong>食べる＝観測。</strong>1回の手番で1個か2個、選んで食べられる（最低1個は必須）。安全なら確率が生き残ったまんじゅうへ再分配され、終盤ほど濃縮されていく。</li>
+      <li><strong>封じ替え</strong>は、あるまんじゅうの毒気を隣へ移す操作。甘さ（得点）を3点払うと発動でき、手番は終わらない——移した直後に自分で食べて、安全になった側を刈り取れる。1手番につき1回まで。</li>
+      <li><strong>最後の1個は確定で毒。</strong>そこを引かされた側の負け——甘さを貯めて自慢するか、使って封じ替えるか、1個で手番を切り上げて次の人に押しつけるかが勝負どころ。</li>
+      <li><strong>食べ終えたまんじゅうは、その場に食べかす（虫食い跡）として残る。</strong>盤面を見れば、誰がどこを食べて安全だったか・どこで毒に当たったかが一目でわかる。</li>
+    </ul>
+  </details>
+
+  <p class="status-line" id="statusLine"></p>
+
+  <div class="board">
+    <div class="tray" id="tray"></div>
+    <div class="side">
+      <div class="scoreboard" id="scoreboard"></div>
+      <div class="action-panel">
+        <h2>行動</h2>
+        <button class="btn" id="btnEat" disabled>食べる</button>
+        <button class="btn ghost" id="btnEndTurn" style="display:none;">ここで手番を終える</button>
+        <button class="btn secondary" id="btnShift">封じ替え</button>
+        <button class="btn ghost" id="btnCancel" style="display:none;">キャンセル</button>
+      </div>
+      <div class="log-panel">
+        <h2>記録</h2>
+        <ol id="log"><li class="empty">まだ何も起きていない。</li></ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" style="display:none;">
+  <div class="card">
+    <p class="result-eyebrow" id="resultEyebrow">GAME OVER</p>
+    <h2 id="resultTitle"></h2>
+    <div class="final-scores" id="finalScores"></div>
+    <button class="btn" id="btnRestart">もう一度</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const BUN_COUNT = 16;
+  const SHIFT_COST = 3;
+  const SHIFT_FRACTION = 0.3;
+  const MAX_EATS_PER_TURN = 2;
+  const KANJI = ['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六'];
+
+  let buns, turn, scores, gameOver, selectedId, mode, shiftSource, isAnimating, resolving, logEntries;
+  let eatsThisTurn, shiftUsedThisTurn, firstRender;
+
+  function initState(){
+    buns = Array.from({length: BUN_COUNT}, (_, i) => ({
+      id: i,
+      alive: true,
+      p: 1 / BUN_COUNT,
+      sweetness: 1 + Math.floor(Math.random() * 3),
+      outcome: null,
+    }));
+    turn = 0;
+    scores = [0, 0];
+    gameOver = false;
+    isAnimating = false;
+    resolving = null;
+    logEntries = [];
+    firstRender = true;
+    startTurn();
+  }
+
+  function startTurn(){
+    selectedId = null;
+    mode = 'eat';
+    shiftSource = null;
+    eatsThisTurn = 0;
+    shiftUsedThisTurn = false;
+  }
+
+  function turnName(t){ return t === 0 ? '先手' : '後手'; }
+  function aliveBuns(){ return buns.filter(b => b.alive); }
+  function lerpColor(a, b, t){
+    const pa = hexToRgb(a), pb = hexToRgb(b);
+    return {
+      r: Math.round(pa.r + (pb.r - pa.r) * t),
+      g: Math.round(pa.g + (pb.g - pa.g) * t),
+      b: Math.round(pa.b + (pb.b - pa.b) * t),
+    };
+  }
+  function hexToRgb(hex){
+    const v = hex.replace('#','');
+    return { r: parseInt(v.slice(0,2),16), g: parseInt(v.slice(2,4),16), b: parseInt(v.slice(4,6),16) };
+  }
+  function cssVar(name){
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function addLog(text){
+    logEntries.unshift(text);
+    if (logEntries.length > 40) logEntries.pop();
+  }
+
+  function nextTurn(){
+    turn = 1 - turn;
+    startTurn();
+  }
+
+  function eatBun(id){
+    if (isAnimating || gameOver || eatsThisTurn >= MAX_EATS_PER_TURN) return;
+    const bun = buns.find(b => b.id === id && b.alive);
+    if (!bun) return;
+    const alive = aliveBuns();
+    const isLast = alive.length === 1;
+    const p = isLast ? 1 : bun.p;
+    const roll = Math.random();
+    const isPoison = roll < p;
+
+    bun.alive = false;
+    bun.outcome = isPoison ? 'poison' : 'safe';
+    isAnimating = true;
+    resolving = { id, outcome: bun.outcome };
+    render();
+
+    setTimeout(() => {
+      resolving = null;
+      isAnimating = false;
+      if (isPoison) {
+        addLog(`${turnName(turn)}が${KANJI[id]}番を食べた……毒だった（確率${(p*100).toFixed(1)}%）`);
+        endGame(turn);
+      } else {
+        scores[turn] += bun.sweetness;
+        const remaining = aliveBuns();
+        remaining.forEach(b => { b.p = b.p / (1 - p); });
+        addLog(`${turnName(turn)}が${KANJI[id]}番を食べた → 安全（確率${(p*100).toFixed(1)}%・甘さ+${bun.sweetness}）`);
+        eatsThisTurn += 1;
+        selectedId = null;
+        if (eatsThisTurn >= MAX_EATS_PER_TURN) nextTurn();
+      }
+      render();
+    }, 900);
+  }
+
+  function endTurn(){
+    if (isAnimating || gameOver || eatsThisTurn < 1) return;
+    addLog(`${turnName(turn)}が${eatsThisTurn}個食べたところで手番を終えた`);
+    nextTurn();
+    render();
+  }
+
+  function applyShift(sourceId, targetId){
+    if (shiftUsedThisTurn || scores[turn] < SHIFT_COST) return;
+    const source = buns.find(b => b.id === sourceId && b.alive);
+    const target = buns.find(b => b.id === targetId && b.alive);
+    if (!source || !target) return;
+    const amount = source.p * SHIFT_FRACTION;
+    source.p -= amount;
+    target.p += amount;
+    scores[turn] -= SHIFT_COST;
+    shiftUsedThisTurn = true;
+    addLog(`${turnName(turn)}が甘さ${SHIFT_COST}点を払い、${KANJI[sourceId]}番から${KANJI[targetId]}番へ毒気を移した（-${(amount*100).toFixed(1)}pt）`);
+    mode = 'eat';
+    shiftSource = null;
+    render();
+  }
+
+  function endGame(loserTurn){
+    gameOver = true;
+    const winner = 1 - loserTurn;
+    document.getElementById('resultTitle').textContent = `${turnName(winner)}の勝ち`;
+    document.getElementById('finalScores').innerHTML =
+      `<span>先手 甘さ <b>${scores[0]}</b></span><span>後手 甘さ <b>${scores[1]}</b></span>`;
+    document.getElementById('overlay').style.display = 'flex';
+  }
+
+  function selectBun(id){
+    if (isAnimating || gameOver) return;
+    const bun = buns.find(b => b.id === id);
+    if (!bun || !bun.alive) return;
+
+    if (mode === 'shift-source') {
+      shiftSource = id;
+      mode = 'shift-target';
+      render();
+      return;
+    }
+    if (mode === 'shift-target') {
+      if (id === shiftSource) { mode = 'shift-source'; shiftSource = null; render(); return; }
+      applyShift(shiftSource, id);
+      return;
+    }
+    selectedId = (selectedId === id) ? null : id;
+    render();
+  }
+
+  function drawBun(canvas, bun, alive){
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2, cy = h / 2;
+
+    if (alive) {
+      const danger = cssVar('--danger') || '#A33B2E';
+      const safe = cssVar('--safe') || '#5F7F52';
+      const glowRgb = lerpColor(safe, danger, Math.min(bun.p, 1));
+      const radius = 16 + 20 * Math.sqrt(Math.min(bun.p, 1));
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+      grad.addColorStop(0, `rgba(${glowRgb.r},${glowRgb.g},${glowRgb.b},0.55)`);
+      grad.addColorStop(1, `rgba(${glowRgb.r},${glowRgb.g},${glowRgb.b},0)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 21, 16, 0, 0, Math.PI * 2);
+    const bg = ctx.createLinearGradient(0, -16, 0, 16);
+    bg.addColorStop(0, '#EACB93');
+    bg.addColorStop(1, '#C89C55');
+    ctx.fillStyle = bg;
+    ctx.fill();
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = '#8C6A34';
+    ctx.stroke();
+
+    const dotR = 2 + bun.sweetness;
+    ctx.beginPath();
+    ctx.arc(0, -3, dotR, 0, Math.PI * 2);
+    ctx.fillStyle = '#AE8A44';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function seededRandom(seed){
+    let s = seed % 2147483647;
+    if (s <= 0) s += 2147483646;
+    return function(){
+      s = (s * 16807) % 2147483647;
+      return (s - 1) / 2147483646;
+    };
+  }
+
+  function drawHole(canvas, bun){
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2, cy = h / 2;
+    const rnd = seededRandom(bun.id * 97 + 13);
+    const points = 9;
+    const path = [];
+    for (let i = 0; i < points; i++) {
+      const angle = (i / points) * Math.PI * 2;
+      const r = 11 + rnd() * 9;
+      path.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r]);
+    }
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    path.forEach((pt, i) => {
+      const next = path[(i + 1) % path.length];
+      const midx = (pt[0] + next[0]) / 2, midy = (pt[1] + next[1]) / 2;
+      if (i === 0) ctx.moveTo(midx, midy);
+      ctx.quadraticCurveTo(pt[0], pt[1], midx, midy);
+    });
+    ctx.closePath();
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = cssVar('--ink') || '#23262B';
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+
+    const rim = bun.outcome === 'poison' ? (cssVar('--danger') || '#A33B2E') : (cssVar('--safe') || '#5F7F52');
+    ctx.strokeStyle = rim;
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  function render(){
+    renderScoreboard();
+    renderStatus();
+    renderTray();
+    renderActions();
+    renderLog();
+  }
+
+  function renderScoreboard(){
+    const el = document.getElementById('scoreboard');
+    el.innerHTML = [0,1].map(t => `
+      <div class="score-chip ${turn === t && !gameOver ? 'active' : ''}">
+        <div class="who"><span class="dot"></span>${turnName(t)}</div>
+        <div class="sweet">${scores[t]}<span>甘さ</span></div>
+      </div>`).join('');
+  }
+
+  function renderStatus(){
+    const el = document.getElementById('statusLine');
+    if (gameOver) { el.textContent = ''; return; }
+    if (mode === 'shift-source') {
+      el.innerHTML = `<strong>${turnName(turn)}の番</strong> — 封じ替え：毒気を送る側のまんじゅうを選んでください`;
+    } else if (mode === 'shift-target') {
+      el.innerHTML = `<strong>${turnName(turn)}の番</strong> — 封じ替え：${KANJI[shiftSource]}番からどこへ移す？`;
+    } else if (aliveBuns().length === 1 && eatsThisTurn === 0) {
+      el.innerHTML = `<strong>${turnName(turn)}の番</strong> — 残り1個。これは確定で毒です。`;
+    } else if (selectedId !== null) {
+      const b = buns.find(x => x.id === selectedId);
+      const left = MAX_EATS_PER_TURN - eatsThisTurn;
+      el.innerHTML = `<strong>${turnName(turn)}の番</strong> — ${KANJI[selectedId]}番を選択中（毒確率 ${(b.p*100).toFixed(1)}%・甘さ${b.sweetness}／あと${left}個まで食べられます）`;
+    } else if (eatsThisTurn === 1) {
+      el.innerHTML = `<strong>${turnName(turn)}の番</strong> — もう1個食べるか、ここで手番を終えられます`;
+    } else {
+      el.innerHTML = `<strong>${turnName(turn)}の番</strong> — まんじゅうを選ぶか、封じ替えを行ってください`;
+    }
+  }
+
+  function renderTray(){
+    const tray = document.getElementById('tray');
+    tray.innerHTML = '';
+    buns.forEach((bun, idx) => {
+      const isResolving = resolving && resolving.id === bun.id;
+      const isHole = !bun.alive && !isResolving;
+
+      const btn = document.createElement('button');
+      btn.className = 'bun-card';
+      if (firstRender) {
+        btn.classList.add('intro');
+        btn.style.animationDelay = (idx * 0.02) + 's';
+      }
+      if (selectedId === bun.id) btn.classList.add('selected');
+      if (shiftSource === bun.id) btn.classList.add('source');
+      if (isResolving) btn.classList.add(resolving.outcome === 'poison' ? 'resolving-poison' : 'resolving-safe');
+      if (isHole) btn.classList.add('eaten');
+      btn.disabled = isHole || isAnimating || gameOver || isResolving;
+
+      const frame = document.createElement('div');
+      frame.className = 'bun-frame';
+      const canvas = document.createElement('canvas');
+      canvas.width = 88; canvas.height = 88;
+      frame.appendChild(canvas);
+      btn.appendChild(frame);
+
+      const idxLabel = document.createElement('div');
+      idxLabel.className = 'bun-idx';
+      idxLabel.textContent = KANJI[bun.id] + '号';
+      btn.appendChild(idxLabel);
+
+      const meta = document.createElement('div');
+      meta.className = 'bun-meta';
+      if (isResolving) {
+        meta.innerHTML = resolving.outcome === 'poison'
+          ? `<span class="poison-tag">毒だった</span>`
+          : `<span class="sw">安全でした</span>`;
+      } else if (isHole) {
+        meta.innerHTML = bun.outcome === 'poison'
+          ? `<span class="poison-tag">毒だった</span>`
+          : `<span class="sw">食済</span>`;
+      } else {
+        meta.innerHTML = `<span class="pct">${(bun.p*100).toFixed(1)}%</span> ／ <span class="sw">甘${bun.sweetness}</span>`;
+      }
+      btn.appendChild(meta);
+
+      btn.addEventListener('click', () => selectBun(bun.id));
+      tray.appendChild(btn);
+
+      if (isHole) drawHole(canvas, bun);
+      else drawBun(canvas, bun, bun.alive);
+    });
+    firstRender = false;
+  }
+
+  function renderActions(){
+    const btnEat = document.getElementById('btnEat');
+    const btnEndTurn = document.getElementById('btnEndTurn');
+    const btnShift = document.getElementById('btnShift');
+    const btnCancel = document.getElementById('btnCancel');
+
+    btnEat.disabled = gameOver || isAnimating || selectedId === null || mode !== 'eat' || eatsThisTurn >= MAX_EATS_PER_TURN;
+    btnEat.textContent = eatsThisTurn > 0 ? 'もう1個食べる' : '食べる';
+    btnEat.onclick = () => { if (selectedId !== null) eatBun(selectedId); };
+
+    const canShift = !gameOver && !isAnimating && !shiftUsedThisTurn && scores[turn] >= SHIFT_COST
+      && aliveBuns().length >= 2 && eatsThisTurn < MAX_EATS_PER_TURN;
+
+    if (mode === 'eat') {
+      btnShift.style.display = '';
+      btnShift.disabled = !canShift;
+      btnShift.textContent = shiftUsedThisTurn ? '封じ替え済み' : `封じ替え（甘さ${SHIFT_COST}消費）`;
+      btnShift.onclick = () => { mode = 'shift-source'; selectedId = null; render(); };
+      btnCancel.style.display = 'none';
+
+      btnEndTurn.style.display = '';
+      btnEndTurn.disabled = gameOver || isAnimating || eatsThisTurn < 1;
+      btnEndTurn.onclick = endTurn;
+    } else {
+      btnShift.style.display = 'none';
+      btnEndTurn.style.display = 'none';
+      btnCancel.style.display = '';
+      btnCancel.onclick = () => { mode = 'eat'; shiftSource = null; render(); };
+    }
+  }
+
+  function renderLog(){
+    const el = document.getElementById('log');
+    if (logEntries.length === 0) {
+      el.innerHTML = '<li class="empty">まだ何も起きていない。</li>';
+      return;
+    }
+    el.innerHTML = logEntries.map(t => `<li>${t}</li>`).join('');
+  }
+
+  document.getElementById('btnRestart').addEventListener('click', () => {
+    document.getElementById('overlay').style.display = 'none';
+    initState();
+    render();
+  });
+
+  initState();
+  render();
+})();
+</script>
+
